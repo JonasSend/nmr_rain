@@ -19,8 +19,8 @@ y_validate = pd.read_csv("data/y_feature_selection.csv").squeeze("columns")
 
 
 def mean_correlation_by_era_loss(_prediction: pd.Series, _data_lgb: lgb.Dataset) -> (str, float, bool):
-        return commons_lgb.mean_correlation_by_era_lgb_loss(_prediction, _data_lgb, era_validate)
-    
+    return commons_lgb.mean_correlation_by_era_lgb_loss(_prediction, _data_lgb, era_validate)
+
 
 # hyperparameter space that has proven performant in previous experiments
 spaces = [[.01, .02],
@@ -36,7 +36,7 @@ hyperparameter_space = dict(zip(commons.LGB_PARAMETER_NAMES, spaces))
 
 df_features = pd.DataFrame({"feature": features})
 
-for i in range(12, 25): # FIXME
+for i in range(25, 40):  # FIXME
     parameters = commons.sample_parameters(hyperparameter_space)
     parameters = commons.add_default_lgb_parameters(parameters)
 
@@ -63,15 +63,16 @@ for i in range(12, 25): # FIXME
         prediction = pd.Series(model.predict(df_X_validate))
 
         score = commons.mean_grouped_spearman_correlation(prediction, y_validate, era_validate)
-        df_features[result_name][df_features["feature"] == feature] = model.best_score.get("valid_0")["mean_correlation_by_era"] - score
+        df_features[result_name][df_features["feature"] == feature] = model.best_score.get("valid_0")[
+                                                                          "mean_correlation_by_era"] - score
 
         df_X_validate[feature] = feature_copy
-        if (k % 100 == 0):
-            commons.print_time_name_and_index("feature", k)
+        if k % 100 == 0:
+            commons.print_time_name_and_number("feature", k)
 
     df_features.to_pickle("data/feature_selection_result.pkl")
 
-    commons.print_time_name_and_index("model", i)
+    commons.print_time_name_and_number("model", i)
 
 df_features["avg"] = df_features.loc[:, df_features.columns != "feature"].mean(axis=1)
 df_features["select"] = df_features["avg"] > max(df_features["avg"][-100:])

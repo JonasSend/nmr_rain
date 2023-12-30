@@ -1,12 +1,12 @@
 """
-download training and validation data and merge the two datasets
+download training and validation data
+split validation into three sets for feature selection, hyperparameter-tuning, and ensembling
 save data as era, target, and feature matrix
 """
 
 import pandas as pd
 from numerapi import NumerAPI
 import os
-from typing import List
 
 numeraiAPI = NumerAPI()
 if os.path.exists("data/train.parquet"):
@@ -17,8 +17,8 @@ if os.path.exists("data/validate.parquet"):
 numeraiAPI.download_dataset("v4.2/train_int8.parquet", "data/train.parquet")
 numeraiAPI.download_dataset("v4.2/validation_int8.parquet", "data/validate.parquet")
 
-df_train = pd.read_parquet("data/train.parquet") # eras 1-574
-df_validate = pd.read_parquet("data/validate.parquet") # eras 575-1080+
+df_train = pd.read_parquet("data/train.parquet")  # eras 1-574
+df_validate = pd.read_parquet("data/validate.parquet")  # eras 575-1080+
 df_validate = df_validate[~df_validate["target"].isna()]
 
 # split each "year" of the validation set into 3 and add to the separate validation sets
@@ -35,12 +35,15 @@ for i in range(min_validation_era, max_validation_era, 51):
     era_test.extend(list(range(i+34, i+51)))
 
 
-def safe_data(name: str, _df: pd.DataFrame, era: List[int]) -> None:
+def safe_data(name: str, _df: pd.DataFrame, era: list[int]) -> None:
     _df = _df[_df["era"].isin(era)]
     
     _era = _df["era"]
+    _era.reset_index(inplace=True, drop=True)
     _y = _df["target"]
+    _y.reset_index(inplace=True, drop=True)
     _df.drop(list(_df.filter(regex="target").columns) + ["data_type", "era"], axis=1, inplace=True)
+    _df.reset_index(inplace=True, drop=True)
 
     _era.to_csv("data/era_" + name + ".csv", index=False)
     _y.to_csv("data/y_" + name + ".csv", index=False)

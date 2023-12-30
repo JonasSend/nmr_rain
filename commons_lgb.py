@@ -4,6 +4,14 @@ import lightgbm as lgb
 import numpy as np
 
 
+def add_default_lgb_parameters(parameters: dict) -> dict:
+    parameters["num_threads"] = 12
+    parameters["bagging_freq"] = 1
+    parameters["verbose"] = -1
+    parameters["metric"] = "None"
+    return parameters
+
+
 def mean_correlation_by_era_lgb_loss(prediction: pd.Series, data_lgb: lgb.Dataset, era: pd.Series) -> (
         str, float, bool):
     labels = data_lgb.get_label()

@@ -1,13 +1,10 @@
 """
-for the train set:
-create shadow features (scrambled original features)
-split resulting data into three folds for cross validation
+create shadow features for the train and respective validate sets
 """
 
 import pandas as pd
 import random
 import commons
-from typing import List
 
 era_train = pd.read_csv("data/era_train.csv").squeeze("columns")
 df_X_train = pd.read_parquet("data/X_train.parquet")
@@ -20,11 +17,12 @@ y_validate = pd.read_csv("data/y_feature_selection.csv").squeeze("columns")
 feature_names = list(df_X_train.columns)
 
 
-def add_and_save_shadow_features(name: str, _df: pd.DataFrame, _feature_names: List[str]) -> None:
+def add_and_save_shadow_features(name: str, _df: pd.DataFrame, _feature_names: list[str]) -> None:
     for i in _feature_names:
         _df[i + "_shadow"] = _df[i].copy().sample(frac=1).values
     
     _df.to_parquet("data/X_" + name + "_with_shadow_features.parquet")
+
 
 # Usually, we would use the same number of shadow features as regular features,
 # but we restrict the number of shadow features to 100 to save memory and time.
